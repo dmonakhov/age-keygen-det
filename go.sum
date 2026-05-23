@@ -1,0 +1,6 @@
+filippo.io/mlkem768 v0.0.0-20260214141301-2e7bebc7d88d h1:YyLyABjdrdt2l/E6JAnku4BjhEDXhxQD2bPOnOvy8/M=
+filippo.io/mlkem768 v0.0.0-20260214141301-2e7bebc7d88d/go.mod h1:ym4egWKLpazdho3bHx0xuQlCq02ttP+vhxxKO8LgO9c=
+github.com/btcsuite/btcd/btcutil v1.2.0 h1:p3+S2g3Q+7G5NOh4Ji+2UrBOrg5Z0Q4ykzShWG1Dhgs=
+github.com/btcsuite/btcd/btcutil v1.2.0/go.mod h1:/Taflm113pYjUpbWKKQEfa6XOtI/+WS8awxeMZpY75k=
+golang.org/x/crypto v0.52.0 h1:RMs7fP2rXdep0CftQlK8Uf+kibLm7qkCcradZWYz988=
+golang.org/x/crypto v0.52.0/go.mod h1:1QgfPxDqh0T2M/elOJtp9RvuR95kVjir0e6/BvEmGbc=

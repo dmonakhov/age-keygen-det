@@ -9,6 +9,8 @@
 // API surface, security UX, and test strategy.
 package agekeygendet
 
+import "fmt"
+
 // KeyType selects which age identity flavour to derive.
 type KeyType int
 
@@ -36,4 +38,32 @@ type DerivedIdentity struct {
 
 	// Type is the key flavour requested.
 	Type KeyType
+}
+
+// DeriveFromSeed derives a deterministic age identity from a 32-byte
+// uniform seed. The seed source is not assumed: any 32 bytes of
+// uniform entropy work (BIP-85 HEX output, /dev/urandom, dice + hash,
+// etc).
+//
+// The same seed always produces the same (identity, recipient) pair
+// for a given key type. Across different key types, the two flavours
+// derive distinct keypairs even from identical seed bytes because the
+// HRP and post-processing differ.
+func DeriveFromSeed(seed []byte, keyType KeyType) (*DerivedIdentity, error) {
+	switch keyType {
+	case KeyTypeClassic:
+		id, rcpt, err := deriveClassic(seed)
+		if err != nil {
+			return nil, err
+		}
+		return &DerivedIdentity{Identity: id, Recipient: rcpt, Type: keyType}, nil
+	case KeyTypePQ:
+		id, rcpt, err := derivePQ(seed)
+		if err != nil {
+			return nil, err
+		}
+		return &DerivedIdentity{Identity: id, Recipient: rcpt, Type: keyType}, nil
+	default:
+		return nil, fmt.Errorf("unknown key type: %d", keyType)
+	}
 }
