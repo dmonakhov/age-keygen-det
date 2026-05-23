@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs of the same workflow on the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test + cross-validate against stock age
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          check-latest: true
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: gofmt check
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "::error::gofmt found unformatted files:"
+            echo "$unformatted"
+            gofmt -d .
+            exit 1
+          fi
+
+      - name: go test
+        run: go test -v ./...
+
+      - name: Install stock age v1.3.1 for cross-validation
+        run: |
+          go install filippo.io/age/cmd/age@v1.3.1
+          go install filippo.io/age/cmd/age-keygen@v1.3.1
+          age --version
+          age-keygen --version
+
+      - name: make verify (cross-validation against stock age)
+        run: make verify
+
+  build:
+    name: Cross-compile (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - linux-amd64
+          - linux-arm64
+          - darwin-amd64
+          - darwin-arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          check-latest: true
+
+      - name: Build ${{ matrix.target }}
+        run: make dist/age-keygen-det-${{ matrix.target }}
+
+      - name: Verify binary is statically linked (Linux only)
+        if: startsWith(matrix.target, 'linux-')
+        run: |
+          file dist/age-keygen-det-${{ matrix.target }}
+          file dist/age-keygen-det-${{ matrix.target }} | grep -q "statically linked"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: age-keygen-det-${{ matrix.target }}
+          path: dist/age-keygen-det-${{ matrix.target }}
+          retention-days: 7
+
+  reproducibility:
+    name: Reproducible build check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          check-latest: true
+
+      - name: Build twice, diff sha256
+        run: |
+          make all
+          sha256sum dist/age-keygen-det-* > /tmp/build1.sha
+          cat /tmp/build1.sha
+          make clean
+          make all
+          sha256sum dist/age-keygen-det-* > /tmp/build2.sha
+          cat /tmp/build2.sha
+          if ! diff -q /tmp/build1.sha /tmp/build2.sha; then
+            echo "::error::Builds are not byte-reproducible"
+            diff /tmp/build1.sha /tmp/build2.sha
+            exit 1
+          fi
+          echo "All four targets are byte-reproducible."
