@@ -137,6 +137,36 @@ A `# created:` timestamp like `age-keygen` produces is
 deliberately omitted: it would defeat byte-stable determinism
 (same seed -> same file, run after run).
 
+#### Label content convention
+
+When `-label TEXT` is given, the text is written verbatim as a
+`# label: TEXT` comment. The label is **publishable** — it
+shares a file with the recipient and gets distributed to anyone
+the recipient does.
+
+Recommended content: **master XFP + BIP-85 derivation path**.
+
+    -label "<xfp-hex> m/83696968'/128169'/32'/<index>'"
+
+Where:
+
+- **XFP** (master fingerprint) is the first 4 bytes of
+  `HASH160(master-pubkey)`, 8 lowercase hex characters. It is
+  the standard public identifier Bitcoin wallets, descriptors,
+  and PSBTs already use to distinguish wallets without revealing
+  the seed. Compute once from the xprv (never from the
+  mnemonic).
+- The BIP-85 path tells the reader which slot of which
+  application produced this seed. Combined with the XFP it
+  uniquely identifies the key.
+
+Example: `627ef3a6 m/83696968'/128169'/32'/0'`.
+
+The label MUST NOT contain mnemonic words, seed bytes, or any
+value derived from them. It lands verbatim in a file you intend
+to publish; treat the label like the recipient itself. See
+sec 8 (decision 7) for the reasoning.
+
 ### 5.3 Flags
 
 | Flag | Description |
@@ -144,7 +174,7 @@ deliberately omitted: it would defeat byte-stable determinism
 | `-type pq\|classic` | Key flavour. Required. |
 | `-hex-file PATH` | Read seed from FILE (whitespace stripped). |
 | `-hex-fd N` | Read seed from open file descriptor N. |
-| `-label TEXT` | Add a `# label: TEXT` comment line. |
+| `-label TEXT` | Add a `# label: TEXT` comment line. See sec 5.2 ("Label content convention") for what to put here. |
 | `-o FILE`, `--output FILE` | Write to FILE (mode 0600) instead of stdout. |
 
 ### 5.4 Recovering the recipient
@@ -241,6 +271,22 @@ Guards against bech32-encoding bugs that pass `age-keygen -y`
    conventions are an upstream concern, not this tool's. Single
    binary, single mode of operation; everything else is yours
    to script.
+
+7. **`-label` content: master XFP + BIP-85 path; never
+   seed-derived.** Initial README draft used demonstration
+   labels like `"BIP-85 hex/32/0"` and `"all-all-all/0"`. The
+   latter outright leaked partial mnemonic words into a file
+   we explicitly tell the user to publish. Even with a
+   well-known test mnemonic, that pattern teaches the wrong
+   practice.
+   **Resolved.** The recommended label content (sec 5.2,
+   "Label content convention") is `<xfp-hex> <BIP-85 path>`.
+   The XFP (master fingerprint) is the same public identifier
+   Bitcoin wallets, descriptors, and PSBTs already publish; it
+   uniquely identifies a wallet without revealing the seed.
+   Combined with the BIP-85 path it tells future-you which
+   wallet and which slot produced an identity file, traceable
+   without exposing anything secret.
 
 ## 9. References
 
