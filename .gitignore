@@ -1,0 +1,17 @@
+# Built binaries
+/age-keygen-det
+/bin/
+/dist/
+
+# Go test / coverage
+*.test
+*.out
+coverage.txt
+
+# Editor artifacts
+*~
+.#*
+\#*\#
+.*.swp
+.*.swo
+.DS_Store
