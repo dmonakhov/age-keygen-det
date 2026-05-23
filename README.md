@@ -89,14 +89,29 @@ age-keygen-det -type classic -hex-file seed.txt -o vault.key
 Add an annotation that ends up as a comment line:
 
 ```sh
-age-keygen-det -type classic -hex-file seed.txt -label "vault gen 0"
+age-keygen-det -type classic -hex-file seed.txt \
+    -label "<MASTER-XFP> m/83696968'/128169'/32'/0'"
 ```
 
 ```
-# label: vault gen 0
-# public key: age19ljh...
-AGE-SECRET-KEY-1QQQ...
+# label: 627ef3a6 m/83696968'/128169'/32'/0'
+# public key: age1m0hh...
+AGE-SECRET-KEY-1AG7W...
 ```
+
+> **Best practice — what to put in `-label`:**
+> The label ends up in a publishable identity file alongside the
+> recipient. Treat it like the recipient: **safe to share,
+> nothing seed-derived**. The combination that uniquely
+> identifies a key without leaking secrets is the **master
+> fingerprint** (XFP — first 4 bytes of `HASH160(master-pubkey)`,
+> a public identifier used by Bitcoin wallets) plus the **BIP-85
+> derivation path**. With those two strings you (and future-you)
+> can tell two identity files apart and trace each back to which
+> wallet and which slot produced it — without ever needing to
+> see, type, or store the mnemonic. **Never** put the mnemonic,
+> seed bytes, or anything derived from them into `-label`; it
+> would land verbatim in a file you intend to publish.
 
 The seed content is whitespace-tolerant: spaces, tabs, and
 newlines are stripped before validating the result is exactly 64
@@ -131,9 +146,13 @@ $ bipsea derive -a hex -n 32 -i 0 -x "$XPRV"
 ea3ceb0b02ee8e587779c63f4b7b3a21e950a213f1ec53cab608d13e8796e6dc
 
 # Pipe directly into age-keygen-det via FD 0 (no filesystem touch).
+# The label uses the master XFP (627ef3a6 for the spec xprv) plus
+# the BIP-85 derivation path - uniquely identifies the key
+# without revealing the seed.
 $ bipsea derive -a hex -n 32 -i 0 -x "$XPRV" | \
-    age-keygen-det -type classic -hex-fd 0 -label "BIP-85 hex/32/0"
-# label: BIP-85 hex/32/0
+    age-keygen-det -type classic -hex-fd 0 \
+                   -label "627ef3a6 m/83696968'/128169'/32'/0'"
+# label: 627ef3a6 m/83696968'/128169'/32'/0'
 # public key: age1m0hhzxelxsxnxm4ennvdpk75j8s7mn5w4tt3e4ntug5qx256wslqmdz8e9
 AGE-SECRET-KEY-1AG7WKZCZA689SAMECCL5K7E6Y854PGSN78K98J4KPRGNAPUKUMWQWNNT4U
 
@@ -192,11 +211,15 @@ xprv9s21ZrQH143K2rbkN6QpF6ZB3QQcyJA6aYbagMp6i8y831VVvpfcWNWqg5DM6GxSn66UDQUrgRgQ
 $ bipsea derive -a hex -n 32 -i 0 -x "$XPRV"
 1e280e343eec53287ea4a1997d7a74b9301c2d7179d27c14b772f8da5e351095
 
-# Full chain into age-keygen-det.
+# Full chain into age-keygen-det. The label is the master XFP
+# (5c9e228d - HASH160 of the master public key, computed once
+# from the xprv, NEVER from the mnemonic) plus the BIP-85
+# derivation path.
 $ bipsea validate -m "$MNEMONIC" | bipsea xprv \
     | xargs -I {} bipsea derive -a hex -n 32 -i 0 -x {} \
-    | age-keygen-det -type classic -hex-fd 0 -label "all-all-all/0"
-# label: all-all-all/0
+    | age-keygen-det -type classic -hex-fd 0 \
+                     -label "5c9e228d m/83696968'/128169'/32'/0'"
+# label: 5c9e228d m/83696968'/128169'/32'/0'
 # public key: age15k2lpn5z26c3q7hu68mu49d37v32cl9pjl2vs86sq70vwmk9jfyqxeltjq
 AGE-SECRET-KEY-1RC5QUDP7A3FJSL4Y5XVH67N5HYCPCTT308F8C99HWTUD5H34ZZ2S2DRZK9
 ```
