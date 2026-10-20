@@ -11,7 +11,7 @@ Two key types:
   compatible with every age release since v1.0 (2021).
 - **Post-quantum age** (`age1pq1...` / `AGE-SECRET-KEY-PQ-1...`,
   HPKE-MLKEM768-X25519 / X-Wing) - compatible with age v1.3.0+
-  (Dec 2024).
+  (Dec 2025).
 
 The same seed always produces the same identity.
 

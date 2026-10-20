@@ -23,7 +23,7 @@ Two key types are supported:
 - **Classic** (X25519). HRP `AGE-SECRET-KEY-`. Compatible with
   every age release since v1.0 (2021).
 - **Post-quantum** (X-Wing, HPKE-MLKEM768-X25519). HRP
-  `AGE-SECRET-KEY-PQ-`. Compatible with age v1.3.0+ (Dec 2024).
+  `AGE-SECRET-KEY-PQ-`. Compatible with age v1.3.0+ (Dec 2025).
 
 The same seed always produces the same identity. The recipient
 (public key) appears in the output as a `# public key:` comment;
